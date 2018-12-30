@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">Speech To Text</string>
+    <string name="tap_mic_icon_to_speak">Tap mic icon to speak</string>
+    <string name="speak_now">Speak now</string>
+    <string name="not_supported">Speech not supported</string>
 </resources>

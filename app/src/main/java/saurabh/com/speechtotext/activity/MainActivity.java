@@ -2,10 +2,8 @@ package saurabh.com.speechtotext.activity;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
-import android.os.Build;
 import android.speech.RecognizerIntent;
 import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -21,12 +19,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 
 import saurabh.com.speechtotext.Data.DictionaryData;
+import saurabh.com.speechtotext.Data.DictionaryItem;
 import saurabh.com.speechtotext.R;
 import saurabh.com.speechtotext.Service.ResponseCallback;
 import saurabh.com.speechtotext.Service.ServiceRequest;
@@ -38,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView tv_text;
     private ImageView iv_image;
     private RecyclerView rv_list;
+    private List<DictionaryItem> dictionaryItems=new ArrayList<>();
+    private AdapterRvCell adapterRvCell;
     private final int REQ_CODE_SPEECH_INPUT = 100;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,11 +70,12 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("onSuccess",json);
                 Gson gson = new GsonBuilder().create();
                 DictionaryData dictionaryData = gson.fromJson(json,DictionaryData.class);
-                Collections.sort(dictionaryData.getDictionary(),new SortByFrequency());
+                dictionaryItems=dictionaryData.getDictionary();
+                Collections.sort(dictionaryItems,new SortByFrequency());
                 RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(MainActivity.this);
                 rv_list.setLayoutManager(mLayoutManager);
                 rv_list.setItemAnimator(new DefaultItemAnimator());
-                AdapterRvCell adapterRvCell = new AdapterRvCell(MainActivity.this,dictionaryData.getDictionary());
+                adapterRvCell = new AdapterRvCell(MainActivity.this,dictionaryData.getDictionary());
                 rv_list.setAdapter(adapterRvCell);
             }
 
@@ -93,11 +94,11 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT,"speech_prompt");
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT,R.string.speak_now);
         try {
             startActivityForResult(intent, REQ_CODE_SPEECH_INPUT);
         } catch (ActivityNotFoundException a) {
-            Toast.makeText(getApplicationContext(),"Speech not cupported",
+            Toast.makeText(getApplicationContext(),R.string.not_supported,
                     Toast.LENGTH_SHORT).show();
         }
     }
@@ -111,6 +112,18 @@ public class MainActivity extends AppCompatActivity {
                     ArrayList<String> result = data
                             .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                     tv_text.setText(result.get(0));
+                    int i=0;
+                    for(DictionaryItem dictionaryItem:dictionaryItems){
+                        if(dictionaryItem.getWord().equalsIgnoreCase(result.get(0))){
+                            int freq=dictionaryItems.get(i).getFrequency();
+                            dictionaryItem.setFrequency(freq+1);
+                            dictionaryItems.set(i,dictionaryItem);
+                            Collections.sort(dictionaryItems,new SortByFrequency());
+                            adapterRvCell.notifyDataSetChanged();
+                            tv_text.setText(dictionaryItem.getWord()+" "+dictionaryItem.getFrequency());
+                        }
+                        i++;
+                    }
                 }
                 break;
             }

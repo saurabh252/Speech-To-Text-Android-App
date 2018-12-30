@@ -111,16 +111,21 @@ public class MainActivity extends AppCompatActivity {
                 if (resultCode == RESULT_OK && null != data) {
                     ArrayList<String> result = data
                             .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    tv_text.setText(result.get(0));
+//                    tv_text.setText(result.get(0));
                     int i=0;
+                    Log.e("DIc Size",""+dictionaryItems.size());
                     for(DictionaryItem dictionaryItem:dictionaryItems){
+                        Log.e("i",""+i);
                         if(dictionaryItem.getWord().equalsIgnoreCase(result.get(0))){
                             int freq=dictionaryItems.get(i).getFrequency();
                             dictionaryItem.setFrequency(freq+1);
                             dictionaryItems.set(i,dictionaryItem);
                             Collections.sort(dictionaryItems,new SortByFrequency());
                             adapterRvCell.notifyDataSetChanged();
-                            tv_text.setText(dictionaryItem.getWord()+" "+dictionaryItem.getFrequency());
+                            tv_text.setText("Phrase: "+dictionaryItem.getWord()+" Frequency: "+dictionaryItem.getFrequency());
+                            return;
+                        }else if(dictionaryItems.size()==i+1){
+                            Toast.makeText(MainActivity.this,"Phrase not found in dictionary",Toast.LENGTH_SHORT).show();
                         }
                         i++;
                     }
